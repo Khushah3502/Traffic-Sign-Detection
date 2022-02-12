@@ -1,0 +1,175 @@
+# Traffic-Sign-Detection
+This project can identify the traffic signs when its placed in front of the camera.
+
+images = []
+labels = []
+import os
+os.listdir("C:/Users/Khush Shah/INMOVIDU AI WORKSHOP/myData")
+
+import cv2
+for i in range(43):
+    ImageNameList = os.listdir("C:/Users/Khush Shah/INMOVIDU AI WORKSHOP/myData/" + str(i))
+    for fileName in ImageNameList:
+        # Accesses each and every images present in all the subfolder
+        Image = cv2.imread("C:/Users/Khush Shah/INMOVIDU AI WORKSHOP/myData/" + str(i) + "/" + str(fileName))
+        #Appends the data of the images into the list
+        images.append(Image)
+        labels.append(i)
+    print("Inside folder " + str(i))
+
+import numpy as np
+images = np.array(images)
+labels = np.array(labels)
+type(images)
+type(labels)
+
+from sklearn.model_selection import train_test_split
+train_features,test_features,train_target,test_target = train_test_split(images,labels,test_size = 0.2)
+train_features.shape
+test_features.shape
+train_target.shape
+test_target.shape
+
+def preprocessing(img):
+    cv2.cvtColor(img,)
+
+def preprocessing(img):
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    img = img/255
+    return img
+
+train_features = np.array(list(map(preprocessing,train_features)))
+train_features.shape
+train_features = train_features.reshape(27839,32,32,1)
+train_features.shape
+test_features = np.array(list(map(preprocessing,test_features)))
+test_features.shape
+test_features = test_features.reshape(6960,32,32,1)
+test_features.shape
+
+#IMAGE AUGMENTATION CODE
+
+from keras.preprocessing.image import ImageDataGenerator
+
+DataGenerator = ImageDataGenerator(rotation_range = 10,
+                                   width_shift_range = 0.1,
+                                   height_shift_range = 0.1,
+                                   shear_range = 0.1,
+                                   zoom_range = 0.2)
+
+DataGenerator.fit(train_features)
+batches = DataGenerator.flow(train_features,train_target,batch_size = 20)
+X_Batch,Y_Batch = next(batches)
+
+import matplotlib.pyplot as p
+
+p.figure(figsize = (10,10))
+for i in range(20):
+    p.subplot(4,5,i+1)
+    p.imshow(X_Batch[i].reshape(32,32))
+p.show()
+
+train_target.shape
+from keras.utils import to_categorical
+train_target = to_categorical(train_target)
+train_target.shape
+
+from keras.models import Sequential
+from keras.layers import Flatten,Dense,MaxPooling2D,Conv2D,Dropout
+
+#Step 1: Specify the Architecture
+
+model = Sequential()
+model.add(Conv2D(60,(5,5),activation = "relu",input_shape = (32,32,1)))
+model.add(Conv2D(60,(5,5),activation = "relu"))
+model.add(MaxPooling2D((2,2)))
+model.add(Conv2D(60,(5,5),activation = "relu"))
+model.add(Conv2D(30,(5,5),activation = "relu"))
+model.add(MaxPooling2D((2,2)))
+model.add(Dropout(0.5))
+model.add(Flatten())
+model.add(Dense(500,activation = "relu"))
+model.add(Dense(43,activation = "softmax"))
+
+#Step 2: Compile the Model
+
+from keras.optimizers import Adam
+model.compile(Adam(0.001),loss = "categorical_crossentropy",metrics = ['accuracy'])
+
+#Step 3: Fit the Model
+
+model.fit_generator(DataGenerator.flow(train_features,train_target,batch_size = 20),epochs = 20)     #fit_generator combines with new images with the original images
+
+import numpy as np
+import cv2
+
+def getCalssName(classNo):
+    if   classNo == 0: return 'Speed Limit 20 km/h'
+    elif classNo == 1: return 'Speed Limit 30 km/h'
+    elif classNo == 2: return 'Speed Limit 50 km/h'
+    elif classNo == 3: return 'Speed Limit 60 km/h'
+    elif classNo == 4: return 'Speed Limit 70 km/h'
+    elif classNo == 5: return 'Speed Limit 80 km/h'
+    elif classNo == 6: return 'End of Speed Limit 80 km/h'
+    elif classNo == 7: return 'Speed Limit 100 km/h'
+    elif classNo == 8: return 'Speed Limit 120 km/h'
+    elif classNo == 9: return 'No passing'
+    elif classNo == 10: return 'No passing for vechiles over 3.5 metric tons'
+    elif classNo == 11: return 'Right-of-way at the next intersection'
+    elif classNo == 12: return 'Priority road'
+    elif classNo == 13: return 'Yield'
+    elif classNo == 14: return 'Stop'
+    elif classNo == 15: return 'No vechiles'
+    elif classNo == 16: return 'Vechiles over 3.5 metric tons prohibited'
+    elif classNo == 17: return 'No entry'
+    elif classNo == 18: return 'General caution'
+    elif classNo == 19: return 'Dangerous curve to the left'
+    elif classNo == 20: return 'Dangerous curve to the right'
+    elif classNo == 21: return 'Double curve'
+    elif classNo == 22: return 'Bumpy road'
+    elif classNo == 23: return 'Slippery road'
+    elif classNo == 24: return 'Road narrows on the right'
+    elif classNo == 25: return 'Road work'
+    elif classNo == 26: return 'Traffic signals'
+    elif classNo == 27: return 'Pedestrians'
+    elif classNo == 28: return 'Children crossing'
+    elif classNo == 29: return 'Bicycles crossing'
+    elif classNo == 30: return 'Beware of ice/snow'
+    elif classNo == 31: return 'Wild animals crossing'
+    elif classNo == 32: return 'End of all speed and passing limits'
+    elif classNo == 33: return 'Turn right ahead'
+    elif classNo == 34: return 'Turn left ahead'
+    elif classNo == 35: return 'Ahead only'
+    elif classNo == 36: return 'Go straight or right'
+    elif classNo == 37: return 'Go straight or left'
+    elif classNo == 38: return 'Keep right'
+    elif classNo == 39: return 'Keep left'
+    elif classNo == 40: return 'Roundabout mandatory'
+    elif classNo == 41: return 'End of no passing'
+    elif classNo == 42: return 'End of no passing by vechiles over 3.5 metric tons'
+
+cap=cv2.VideoCapture(0)
+cap.set(3,640)
+cap.set(4,480)
+cap.set(10,180)
+
+font = cv2.FONT_HERSHEY_SIMPLEX
+while True:
+    success,imgOriginal=cap.read()
+    img=np.asarray(imgOriginal)
+    img=cv2.resize(img,(32,32))
+    img=preprocessing(img)
+    cv2.imshow("Processed Image",img)
+    img=img.reshape(1,32,32,1)
+    cv2.putText(imgOriginal,"Class: ",(20,35),font,0.75,(0,0,255),2,cv2.LINE_AA)
+    cv2.putText(imgOriginal,"Probability: ",(20,75),font,0.75,(0,0,255),2,cv2.LINE_AA)
+    predictions=model.predict(img)
+    classIndex=model.predict_classes(img)
+    probabilityValue=np.amax(predictions)
+    if probabilityValue>0.75:
+        cv2.putText(imgOriginal,str(classIndex) + " "+ str(getCalssName(classIndex)),(120,35),font,0.75,(0,0,255),2,cv2.LINE_AA)
+        cv2.putText(imgOriginal,str(round(probabilityValue*100,2)) + "%",(120,150),font,0.75,(0,0,255),2,cv2.LINE_AA)
+    cv2.imshow("Result",imgOriginal)
+    if cv2.waitKey(1)==113:
+        cv2.destroyAllWindows()
+        break
